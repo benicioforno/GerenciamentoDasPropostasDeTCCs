@@ -12,6 +12,8 @@ import com.mycompany.gerenciamentodasprospostasdetccsdocurso.model.Professor;
 import com.mycompany.gerenciamentodasprospostasdetccsdocurso.model.StatusProposta;
 import static com.mycompany.gerenciamentodasprospostasdetccsdocurso.model.StatusProposta.EM_ANALISE;
 import com.mycompany.gerenciamentodasprospostasdetccsdocurso.model.Tcc;
+
+import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -102,23 +104,30 @@ public class TccController {
     
     /**
      * Método para verificar os prazos dos objetos Tcc que estão em análise.
-     * O prazo não pode ser maior que sete dias.
+     * O prazo não pode ser maior que sete dias, o método chama o método privado "atualizarPrazoDaProposta" caso for maior que sete dias.
      */
     private void verificarPrazosDasPropostas(){
         for(Tcc proposta : tccDAO.listarTodos()){
             if(proposta.getStatus() == StatusProposta.EM_ANALISE){
                 long diasPassados = ChronoUnit.DAYS.between(proposta.getDataAlteracaoStatus(), LocalDate.now());
                 if(diasPassados > 7){
-                    System.out.println("\nAVISO: Prazo da proposta ID " + proposta.getId() + " expirou. Voltando para DISPONIVEL.");
-                    proposta.setStatus(StatusProposta.DISPONIVEL);
-                    proposta.setAlunoInteressado(null);
-                    proposta.setDataAlteracaoStatus(null);
-                    tccDAO.salvar(proposta);
+                    atualizarPrazoDaProposta(proposta);
                 }
             }
         }
     }
-    
+
+    /**
+     * Método responsável por atualizar o prazo da proposta passada por parâmetro.
+     * @param proposta Proposta passada por parâmetro para atualizar o status.
+     */
+    private void atualizarPrazoDaProposta(Tcc proposta){
+        System.out.println("\nAVISO: Prazo da proposta ID " + proposta.getId() + " expirou. Voltando para DISPONIVEL.");
+        proposta.setStatus(StatusProposta.DISPONIVEL);
+        proposta.setAlunoInteressado(null);
+        proposta.setDataAlteracaoStatus(null);
+        tccDAO.salvar(proposta);
+    }
     /**
      * Método responsável por tratar erros e remover um objeto Tcc da persisntência de dados.
      * @param idTcc             Id usado para encontrar e remover o objeto Tcc.
